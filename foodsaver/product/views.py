@@ -85,3 +85,12 @@ class ProductVendor(APIView):
             serializer.save(vendor=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, format=None):
+        try: 
+            product = Product.objects.filter(vendor=request.user).get(id=request.data['pk'])
+            product.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Product.DoesNotExist:
+            raise Http404
+    

@@ -102,7 +102,7 @@
 
 									<RouterLink v-bind:to="product.get_absolute_url" class="button is-info mt-4">View Details</RouterLink>
 									<template v-if="$store.state.isAuthenticated">
-										<button class="button is-danger mt-4 mx-2" @click="deleteProduct">Delete</button>
+										<button class="button is-danger mt-4 mx-2" @click="deleteProduct(product.id)">Delete</button>
 									</template>
 								</div>
 							</div>
@@ -175,7 +175,6 @@ export default {
 			this.$store.commit('setIsLoading', false)
 		},
 		async createProduct() {
-			console.log('Click')
 			this.errors = []
 			if (this.product_name === '') {
 				this.errors.push('The product name field is missing!')
@@ -223,6 +222,8 @@ export default {
 					slug: slugify(this.product_name)
 				}
 
+				this.$store.commit('setIsLoading', true)
+
 				await axios
 					.post('/api/v1/products/vendor/', data)
 					.then((response) => {
@@ -255,7 +256,28 @@ export default {
 				})
 			}
 		},
-		deleteProduct() {},
+		async deleteProduct(id) {
+			console.log(id)
+			this.$store.commit('setIsLoading', true)
+
+			await axios
+				.delete('/api/v1/products/vendor/', { data: { pk: id } })
+				.then((response) => {
+					console.log(response.data)
+					toast({
+						message: 'Delete Product Successfully.',
+						type: 'is-success',
+						dismissible: true,
+						pauseOnHover: true,
+						duration: 2000,
+						position: 'bottom-right'
+					})
+				})
+				.catch((error) => {
+					console.log(error)
+				})
+			this.$store.commit('setIsLoading', false)
+		},
 		getName() {
 			return this.username
 		},
