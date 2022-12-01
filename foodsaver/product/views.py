@@ -4,7 +4,8 @@ from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework import status, authentication, permissions
 
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
@@ -15,12 +16,12 @@ class ProductsList(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
     
-    def post(self, request, format=None):
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def post(self, request, format=None):
+    #     serializer = ProductSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
 
 class ProductDetail(APIView):
@@ -59,11 +60,28 @@ def search(request):
         return Response({"products": []})
     
 @api_view(['GET'])
+@authentication_classes([authentication.TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
 def get_products_by_vendorid(request, format=None):
-    vendorid = request.data.get('vendorid')
+    vendorid = request.user.id
     if vendorid:
-        products = Product.objects.filter(vendor=vendorid)
+        products = Product.objects.filter(vendor_id=vendorid)
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
     else:
         return Response({"products": []})
+    
+class ProductVendor(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        return Response(request.user.id)
+    
+    def post(self, request, format=None):
+        print(request.user.id)
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(vendor=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
