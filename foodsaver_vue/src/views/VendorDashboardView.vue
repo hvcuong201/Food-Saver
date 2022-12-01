@@ -65,15 +65,7 @@
 							<label class="label">Product's image</label>
 							<div class="file">
 								<div class="control">
-									<label class="file-label">
-										<input class="file-input" type="file" name="image" />
-										<span class="file-cta">
-											<span class="file-icon">
-												<i class="fas fa-upload"></i>
-											</span>
-											<span class="file-label"> Choose a file… </span>
-										</span>
-									</label>
+									<input class="file my-4" type="file" name="image" @change="onFileSelected" />
 								</div>
 							</div>
 						</div>
@@ -137,7 +129,8 @@ export default {
 			product_qty: '',
 			product_unit: '',
 			product_desc: '',
-			errors: []
+			errors: [],
+			selectedFile: null
 		}
 	},
 	mounted() {
@@ -150,6 +143,18 @@ export default {
 		this.getProductsByVendorID()
 	},
 	methods: {
+		async onFileSelected(event) {
+			//this.selectedFile = event.target.files[0]
+			const toBase64 = (file) =>
+				new Promise((resolve, reject) => {
+					const reader = new FileReader()
+					reader.readAsDataURL(file)
+					reader.onload = () => resolve(reader.result)
+					reader.onerror = (error) => reject(error)
+				})
+			this.selectedFile = await toBase64(event.target.files[0])
+			console.log(this.selectedFile)
+		},
 		async getVendorID() {
 			await axios
 				.get('/api/v1/products/vendor/')
@@ -219,7 +224,8 @@ export default {
 					unit: this.product_unit,
 					description: this.product_desc,
 					vendor: this.vendorid,
-					slug: slugify(this.product_name)
+					slug: slugify(this.product_name),
+					base64_img: this.selectedFile
 				}
 
 				this.$store.commit('setIsLoading', true)

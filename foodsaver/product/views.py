@@ -79,8 +79,9 @@ class ProductVendor(APIView):
     def post(self, request, format=None):
         #print(request.user.id)
         serializer = ProductSerializer(data=request.data)
+        base64_img = request.data['base64_img']
         if serializer.is_valid():
-            serializer.save(vendor=request.user)
+            serializer.save(vendor=request.user, image=decode_base64_file(base64_img))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -88,3 +89,40 @@ class ProductVendor(APIView):
         product = self.get_object(pk=request.data['pk'])
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+def decode_base64_file(data):
+
+    def get_file_extension(file_name, decoded_file):
+        import imghdr
+
+        extension = imghdr.what(file_name, decoded_file)
+        extension = "jpg" if extension == "jpeg" else extension
+
+        return extension
+
+    from django.core.files.base import ContentFile
+    import base64
+    import six
+    import uuid
+
+    # Check if this is a base64 string
+    if isinstance(data, six.string_types):
+        # Check if the base64 string is in the "data:" format
+        if 'data:' in data and ';base64,' in data:
+            # Break out the header from the base64 content
+            header, data = data.split(';base64,')
+
+        # Try to decode the file. Return validation error if it fails.
+        try:
+            decoded_file = base64.b64decode(data)
+        except TypeError:
+            TypeError('invalid_image')
+
+        # Generate file name:
+        file_name = str(uuid.uuid4())[:12] # 12 characters are more than enough.
+        # Get the file name extension:
+        file_extension = get_file_extension(file_name, decoded_file)
+
+        complete_file_name = "%s.%s" % (file_name, file_extension, )
+
+        return ContentFile(decoded_file, name=complete_file_name)

@@ -19,7 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "get_image",
             "get_thumbnail",
             "vendor",
-            "get_vendor_name"
+            "get_vendor_name",
         )
 
 class CategorySerializer(serializers.ModelSerializer):
