@@ -238,10 +238,18 @@ export default {
 						})
 					})
 					.catch((error) => {
-						this.errors.push('Something went wrong. Please try again')
+						toast({
+							message: 'Publish Product Unsuccessfully.',
+							type: 'is-danger',
+							dismissible: true,
+							pauseOnHover: true,
+							duration: 2000,
+							position: 'bottom-right'
+						})
 						console.log(error)
 					})
 
+				this.getProductsByVendorID()
 				this.$store.commit('setIsLoading', false)
 			} else {
 				this.errors.forEach((error) => {
@@ -275,7 +283,17 @@ export default {
 				})
 				.catch((error) => {
 					console.log(error)
+					console.log(response.data)
+					toast({
+						message: 'Delete Product Unsuccessfully.',
+						type: 'is-dangerr',
+						dismissible: true,
+						pauseOnHover: true,
+						duration: 2000,
+						position: 'bottom-right'
+					})
 				})
+			this.getProductsByVendorID()
 			this.$store.commit('setIsLoading', false)
 		},
 		getName() {

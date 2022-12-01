@@ -15,14 +15,6 @@ class ProductsList(APIView):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
-    
-    # def post(self, request, format=None):
-    #     serializer = ProductSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
 
 class ProductDetail(APIView):
     def get_object(self, category_slug, product_slug):
@@ -75,11 +67,17 @@ class ProductVendor(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
+    def get_object(self, pk):
+        try:
+            return Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            raise Http404
+    
     def get(self, request, format=None):
         return Response(request.user.id)
     
     def post(self, request, format=None):
-        print(request.user.id)
+        #print(request.user.id)
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(vendor=request.user)
@@ -87,10 +85,6 @@ class ProductVendor(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, format=None):
-        try: 
-            product = Product.objects.filter(vendor=request.user).get(id=request.data['pk'])
-            product.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Product.DoesNotExist:
-            raise Http404
-    
+        product = self.get_object(pk=request.data['pk'])
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
